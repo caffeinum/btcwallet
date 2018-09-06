@@ -1,5 +1,3 @@
-// +build !wasm
-
 // Copyright (c) 2015-2016 The btcsuite developers
 // Use of this source code is governed by an ISC
 // license that can be found in the LICENSE file.
@@ -16,7 +14,7 @@ import (
 
 	"github.com/btcsuite/btcutil/hdkeychain"
 	"github.com/btcsuite/btcwallet/internal/legacy/keystore"
-	"github.com/btcsuite/golangcrypto/ssh/terminal"
+	"syscall/js"
 )
 
 // ProvideSeed is used to prompt for the wallet seed which maybe required during
@@ -52,11 +50,8 @@ func ProvidePrivPassphrase() ([]byte, error) {
 	prompt := "Enter the private passphrase of your wallet: "
 	for {
 		fmt.Print(prompt)
-		pass, err := terminal.ReadPassword(int(os.Stdin.Fd()))
-		if err != nil {
-			return nil, err
-		}
-		fmt.Print("\n")
+		reply := js.Global().Get("window").Call("prompt", "Read Password").String()
+		pass := []byte(reply)
 		pass = bytes.TrimSpace(pass)
 		if len(pass) == 0 {
 			continue
@@ -121,11 +116,9 @@ func promptPass(reader *bufio.Reader, prefix string, confirm bool) ([]byte, erro
 	prompt := fmt.Sprintf("%s: ", prefix)
 	for {
 		fmt.Print(prompt)
-		pass, err := terminal.ReadPassword(int(os.Stdin.Fd()))
-		if err != nil {
-			return nil, err
-		}
-		fmt.Print("\n")
+		pass_reply := js.Global().Get("window").Call("prompt", "Read Password").String()
+		pass := []byte(pass_reply)
+
 		pass = bytes.TrimSpace(pass)
 		if len(pass) == 0 {
 			continue
@@ -136,11 +129,9 @@ func promptPass(reader *bufio.Reader, prefix string, confirm bool) ([]byte, erro
 		}
 
 		fmt.Print("Confirm passphrase: ")
-		confirm, err := terminal.ReadPassword(int(os.Stdin.Fd()))
-		if err != nil {
-			return nil, err
-		}
-		fmt.Print("\n")
+		confirm_reply := js.Global().Get("window").Call("prompt", "Read Password").String()
+		confirm := []byte(confirm_reply)
+
 		confirm = bytes.TrimSpace(confirm)
 		if !bytes.Equal(pass, confirm) {
 			fmt.Println("The entered passphrases do not match")
